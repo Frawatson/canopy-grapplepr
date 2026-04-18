@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	_ "github.com/lib/pq"
 )
 
 func unsafeQuery(w http.ResponseWriter, r *http.Request) {
