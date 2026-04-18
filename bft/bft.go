@@ -1,5 +1,6 @@
 package bft
 
+n// Blast radius diagnostic test
 import (
 	"bytes"
 	"cmp"
