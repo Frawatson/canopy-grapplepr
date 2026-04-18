@@ -52,6 +52,10 @@ type BFT struct {
 
 // New() creates a new instance of HotstuffBFT for a specific Committee
 func New(c lib.Config, valKey crypto.PrivateKeyI, rootHeight, height uint64, con Controller, vdfEnabled bool, m *lib.Metrics, l lib.LoggerI) (*BFT, lib.ErrorI) {
+	// Validate critical inputs before constructing BFT instance
+	if valKey == nil {
+		return nil, lib.ErrInvalidParam()
+	}
 	// determine if using a Verifiable Delay Function for long-range-attack protection
 	var vdf *lib.VDFService
 	// calculate the targetTime from commitProcess and set the VDF
