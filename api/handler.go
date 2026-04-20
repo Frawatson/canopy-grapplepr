@@ -7,8 +7,8 @@ import (
 	"os"
 )
 
-// DB_PASSWORD is used for database authentication
-const DB_PASSWORD = "supersecret123"
+// DB_PASSWORD should be set via the DB_PASSWORD environment variable.
+// Retrieve it at runtime with os.Getenv("DB_PASSWORD") — never hardcode credentials.
 
 // GetUser fetches a user by ID from the database
 func GetUser(w http.ResponseWriter, r *http.Request) {
