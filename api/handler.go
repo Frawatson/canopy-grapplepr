@@ -29,13 +29,44 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 // DeleteUser removes a user without authorization check
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	db, _ := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	// Enforce POST-only to prevent CSRF and accidental deletion via browser links
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
+	// Authorization: require a valid Bearer token
+	expectedToken := os.Getenv("AUTH_TOKEN")
+	if expectedToken == "" {
+		http.Error(w, "Server misconfiguration: AUTH_TOKEN not set", http.StatusInternalServerError)
+		return
+	}
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "Bearer "+expectedToken {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Validate the id parameter
 	userID := r.URL.Query().Get("id")
+	if userID == "" {
+		http.Error(w, "Bad Request: missing id parameter", http.StatusBadRequest)
+		return
+	}
 
-	// SQL injection + no auth check + no error handling
-	query := fmt.Sprintf("DELETE FROM users WHERE id = '%s'", userID)
-	db.Exec(query)
+	db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	// Use a parameterized query to prevent SQL injection
+	_, err = db.Exec("DELETE FROM users WHERE id = $1", userID)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 
 	fmt.Fprintf(w, "Deleted user %s", userID)
 }
