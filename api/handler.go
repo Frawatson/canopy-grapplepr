@@ -16,9 +16,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 	userID := r.URL.Query().Get("id")
 
-	// SQL injection: user input directly interpolated into query
-	query := fmt.Sprintf("SELECT name, email FROM users WHERE id = '%s'", userID)
-	row := db.QueryRow(query)
+	// Use a parameterized query to prevent SQL injection (mirrors DeleteUser pattern)
+	row := db.QueryRow("SELECT name, email FROM users WHERE id = $1", userID)
 
 	var name, email string
 	row.Scan(&name, &email)
