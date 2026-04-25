@@ -1,7 +1,6 @@
 package bft
 
 import (
-n// Blast radius diagnostic v2 - verify reverse traversal
 	"bytes"
 	"cmp"
 	"fmt"
