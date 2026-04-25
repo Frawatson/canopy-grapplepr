@@ -61,11 +61,24 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 
 	// Use a parameterized query to prevent SQL injection
-	_, err = db.Exec("DELETE FROM users WHERE id = $1", userID)
+	result, err := db.Exec("DELETE FROM users WHERE id = $1", userID)
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if rowsAffected == 0 {
+		http.Error(w, "Not Found: no user with that id", http.StatusNotFound)
+		return
+	}
+
+	// Set explicit Content-Type to prevent browser sniffing the body as text/html,
+	// which would allow reflected XSS via a crafted id parameter.
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	fmt.Fprintf(w, "Deleted user %s", userID)
 }
