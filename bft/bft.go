@@ -53,13 +53,11 @@ type BFT struct {
 // New() creates a new instance of HotstuffBFT for a specific Committee
 func New(c lib.Config, valKey crypto.PrivateKeyI, rootHeight, height uint64, con Controller, vdfEnabled bool, m *lib.Metrics, l lib.LoggerI) (*BFT, lib.ErrorI) {
 	// determine if using a Verifiable Delay Function for long-range-attack protection
-	// Validate inputs before constructing BFT.
-	// NOTE: cmd/rpc/unsafe_handler.go, cmd/rpc/auth_check.go, and cmd/rpc/timing_check.go
-	// appear in the commit history for this PR but were NOT included in the reviewed diff.
-	// Those files must be audited before merge to confirm no authentication bypass,
-	// timing oracle, or unsafe request handling changes were introduced outside of review.
-	if valKey == nil {
-		return nil, lib.ErrInvalidParam("valKey is nil: a valid consensus private key is required")
+	// Guard against both a nil interface and a typed nil (non-nil interface wrapping a
+	// nil concrete pointer). In Go, (*T)(nil) passed as an interface is not == nil,
+	// but dereferencing it downstream will panic. Use reflect to catch both cases.
+	if valKey == nil || (reflect.ValueOf(valKey).Kind() == reflect.Ptr && reflect.ValueOf(valKey).IsNil()) {
+		return nil, lib.ErrInvalidParam("valKey is nil or typed-nil: a valid consensus private key is required")
 	}
 	var vdf *lib.VDFService
 	// calculate the targetTime from commitProcess and set the VDF
