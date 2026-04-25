@@ -37,7 +37,9 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	// Authorization: require a valid Bearer token
 	expectedToken := os.Getenv("AUTH_TOKEN")
 	if expectedToken == "" {
-		http.Error(w, "Server misconfiguration: AUTH_TOKEN not set", http.StatusInternalServerError)
+		// Log the detailed reason server-side; never expose config details to callers
+		log.Println("ERROR: AUTH_TOKEN environment variable is not set")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	authHeader := r.Header.Get("Authorization")
